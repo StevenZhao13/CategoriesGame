@@ -2,6 +2,8 @@ package session_mng;
 
 import javax.websocket.Session;
 
+import org.json.simple.JSONObject;
+
 import exceptions.PartyNotFoundException;
 
 public class GameParty implements GamePartyInterface{
@@ -19,12 +21,6 @@ public class GameParty implements GamePartyInterface{
 		this.players[0] = new Player(hostSession);
 	}
 	
-	public boolean joinPlayer(Session hostSession){
-		
-		
-		return false;
-	}
-
 
 	@Override
 	public void sendUpdatePlayerList() {
@@ -46,6 +42,36 @@ public class GameParty implements GamePartyInterface{
 
 	@Override
 	public void reset() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean joinPlayer(Session hostSession, JSONObject json) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void startParty(JSONObject json) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void receiveAnswerList(JSONObject json) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void receiveCompletedVoteList(JSONObject json) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void sendResultList() {
 		// TODO Auto-generated method stub
 		
 	}

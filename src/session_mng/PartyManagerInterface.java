@@ -2,17 +2,17 @@ package session_mng;
 
 import javax.websocket.Session;
 
+import org.json.simple.JSONObject;
+
 import exceptions.PartyNotFoundException;
 import exceptions.PartyOverloadException;
 
 public interface PartyManagerInterface {
 		
-	public int initParty(Session hostSession) throws PartyOverloadException;
+	public int initParty(Session hostSession, JSONObject json) throws PartyOverloadException;
 		
-	public GameParty getSpecificParty(int index) throws PartyNotFoundException;
+	public int joinParty(Session hostSession, JSONObject json)throws PartyNotFoundException;
 	
-	public void terminateSpecificParty(int index);
-
-	
+	public void partyBusiness(JSONObject json) throws PartyNotFoundException;
 	
 }

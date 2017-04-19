@@ -13,14 +13,14 @@ public class WebSocketEndPoint {
     private Logger logger = Logger.getLogger(this.getClass().getName());
 
 	@OnOpen
-	public void OnOpen(Session session){
+	public void onOpen(Session session){
         logger.info("Connected ... " + session.getId());
 
 	}
 	
 	
 	@OnMessage
-	public String sayHello(String message, Session session){
+	public String onMessage(String message, Session session){
         switch (message) {
         case "quit":
             try {
