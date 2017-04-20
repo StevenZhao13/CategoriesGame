@@ -4,10 +4,12 @@ import javax.websocket.Session;
 
 import org.json.simple.JSONObject;
 
+import exceptions.PartyMaxPlayerException;
+
 public interface GamePartyInterface {
 
 	
-	public boolean joinPlayer(Session hostSession, JSONObject json);
+	public void joinPlayer(Session hostSession, JSONObject json) throws PartyMaxPlayerException ;
 	
 	public void startParty(JSONObject json);
 	
@@ -26,6 +28,6 @@ public interface GamePartyInterface {
 	
 	public void sendResultList();
 
-	public void reset();
+	public void restartParty();
 	
 }

@@ -1,9 +1,15 @@
 package session_mng;
 
+import java.io.IOException;
+
+import javax.websocket.EncodeException;
 import javax.websocket.Session;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import toolbox.ToolBox;
+import exceptions.PartyMaxPlayerException;
 import exceptions.PartyNotFoundException;
 
 public class GameParty implements GamePartyInterface{
@@ -16,21 +22,101 @@ public class GameParty implements GamePartyInterface{
 	 * 
 	 * @param hostSession
 	 */
-	public GameParty(Session hostSession){
+	public GameParty(Session hostSession, JSONObject json){
 		this.players = new Player[MAX_PLAYER];
-		this.players[0] = new Player(hostSession);
+		this.players[0] = new Player(hostSession, json);
 	}
 	
-
+	
+	/**
+	 * 
+	 */
 	@Override
-	public void sendUpdatePlayerList() {
-		// TODO Auto-generated method stub
+	public void joinPlayer(Session hostSession, JSONObject json) 
+			throws PartyMaxPlayerException{
 		
+		int i;
+		for (i = 0; i < this.players.length; i++){
+			if (this.players[i] == null){
+				this.players[i] = new Player(hostSession, json);
+			} else {}
+		}
+		
+		if (i >= this.players.length){
+			throw new PartyMaxPlayerException("Max Player Reached");
+		}
+		
+		this.sendUpdatePlayerList();
 	}
 
+	
+
+	/**
+	 * This method sends to every player in the list
+	 * a brand new list of player 
+	 */
+	@Override
+	public void sendUpdatePlayerList() {
+		
+		// Prep the JSON. Is same for all the players
+		JSONObject json = new JSONObject();
+		json.put("type", "SendPlayerList");
+
+		JSONArray jarray = new JSONArray();
+		
+		for (int i = 0; i < this.players.length; i++){
+			if (this.players[i] != null){
+				jarray.add(this.players[i].getName());
+			} else {}
+		}
+		
+		json.put("names", jarray);
+		
+		
+		for (int i = 0; i < this.players.length; i++){
+			if (this.players[i] != null){
+				
+				// Sending new player to all players
+				this.players[i].getWebSocketSession().getAsyncRemote().sendObject(json);
+			} else {}
+		}
+	}
+	
+	
+	
+	/**
+	 * 
+	 */
+	@Override
+	public void startParty(JSONObject json) {
+		
+		
+
+	}
+
+	
+	/**
+	 * 
+	 */
 	@Override
 	public void sendLetterNList() {
-		// TODO Auto-generated method stub
+		
+		// Prep the JSON. Is same for all the players
+		JSONObject json = new JSONObject();
+		json.put("type", "SendLetterNList");
+		
+		json.put("letter", ToolBox.rollLetter());
+		
+		JSONArray jarray = new JSONArray();
+		jarray.
+		
+		for (int i = 0; i < this.players.length; i++){
+			if (this.players[i] != null){
+				
+				// Sending new player to all players
+				this.players[i].getWebSocketSession().getAsyncRemote().sendObject(json);
+			} else {}
+		}
 		
 	}
 
@@ -41,22 +127,11 @@ public class GameParty implements GamePartyInterface{
 	}
 
 	@Override
-	public void reset() {
+	public void restartParty() {
 		// TODO Auto-generated method stub
 		
 	}
 
-	@Override
-	public boolean joinPlayer(Session hostSession, JSONObject json) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public void startParty(JSONObject json) {
-		// TODO Auto-generated method stub
-		
-	}
 
 	@Override
 	public void receiveAnswerList(JSONObject json) {

@@ -21,6 +21,7 @@ public class WebSocketEndPoint {
 	
 	@OnMessage
 	public String onMessage(String message, Session session){
+		
         switch (message) {
         case "quit":
             try {
