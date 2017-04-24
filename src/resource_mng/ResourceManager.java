@@ -67,17 +67,38 @@ public class ResourceManager {
 
 		}
 	}
-	
-	
+
+
 	/**
 	 * This method returns 10 random categories
 	 * @param path
 	 */
 	public static ArrayList<String> getRandomCatList(){
+		int[] indexes = new int[10];
+
+
+		for (int i = 0; i < indexes.length; i++){
+			int curIndex;
+			boolean duplicate = false;
+
+			do {
+				curIndex = (int) (categoriesRes.length * Math.random());
+				for  (int j = 0; j < i; j++){
+					if(indexes[j] == curIndex)		duplicate = true;	
+				}
+			} while (duplicate);
+			
+			indexes[i] = curIndex;
+		}
 		
 		
-		
-		return null;	
+		ArrayList<String> ret = new ArrayList<String>();
+		for (int i = 0; i < indexes.length; i++){
+			ret.add(categoriesRes[ indexes[i] ]);	
+		}
+
+		return ret;	
 	}
 
 }
+ 

@@ -8,6 +8,7 @@ import javax.websocket.Session;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import resource_mng.ResourceManager;
 import toolbox.ToolBox;
 import exceptions.PartyMaxPlayerException;
 import exceptions.PartyNotFoundException;
@@ -103,17 +104,17 @@ public class GameParty implements GamePartyInterface{
 		
 		// Prep the JSON. Is same for all the players
 		JSONObject json = new JSONObject();
-		json.put("type", "SendLetterNList");
 		
+		json.put("type", "SendLetterNList");
 		json.put("letter", ToolBox.rollLetter());
 		
 		JSONArray jarray = new JSONArray();
-		jarray.
+		jarray.addAll(ResourceManager.getRandomCatList());
+		json.put("categoryList", jarray);
+		
 		
 		for (int i = 0; i < this.players.length; i++){
 			if (this.players[i] != null){
-				
-				// Sending new player to all players
 				this.players[i].getWebSocketSession().getAsyncRemote().sendObject(json);
 			} else {}
 		}
