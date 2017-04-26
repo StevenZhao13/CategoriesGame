@@ -74,17 +74,23 @@ public class ResourceManager {
 	 * @param path
 	 */
 	public static ArrayList<String> getRandomCatList(){
+		// Create array first for 10 unique categories indexes
 		int[] indexes = new int[10];
-
-
+		
+		
+		// Cycle of 10
 		for (int i = 0; i < indexes.length; i++){
 			int curIndex;
 			boolean duplicate = false;
 
+			
+			// Randomize a number, and then trace back to check for duplication
+			// if duplicate, increment by 1 and check again
+			curIndex = (int) (categoriesRes.length * Math.random());
 			do {
-				curIndex = (int) (categoriesRes.length * Math.random());
 				for  (int j = 0; j < i; j++){
-					if(indexes[j] == curIndex)		duplicate = true;	
+					if(indexes[j] == curIndex)		duplicate = true;
+					else							curIndex++;
 				}
 			} while (duplicate);
 			
@@ -92,6 +98,8 @@ public class ResourceManager {
 		}
 		
 		
+		
+		// Fetch actual Strings from resource stash.
 		ArrayList<String> ret = new ArrayList<String>();
 		for (int i = 0; i < indexes.length; i++){
 			ret.add(categoriesRes[ indexes[i] ]);	
