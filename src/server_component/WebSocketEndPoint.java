@@ -7,6 +7,10 @@ import javax.websocket.*;
 import javax.websocket.CloseReason.CloseCodes;
 import javax.websocket.server.ServerEndpoint;
 
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
 
 @ServerEndpoint("/hello")
 public class WebSocketEndPoint {
@@ -21,6 +25,25 @@ public class WebSocketEndPoint {
 	
 	@OnMessage
 	public String onMessage(String message, Session session){
+		JSONParser parser = new JSONParser();
+		Object obj;
+		try {
+			obj = parser.parse(message);
+			JSONObject jsonObject =  (JSONObject) obj;
+			
+			
+			
+			
+			
+		} catch (ParseException e1) {
+			session.getAsyncRemote().sendText("");
+		} 
+
+
+		
+		
+		
+		
 		
         switch (message) {
         case "quit":

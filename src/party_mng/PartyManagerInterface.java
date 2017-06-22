@@ -1,4 +1,4 @@
-package session_mng;
+package party_mng;
 
 import javax.websocket.Session;
 
@@ -14,10 +14,7 @@ public interface PartyManagerInterface {
 	public int initParty(Session hostSession, JSONObject json)
 			throws PartyOverloadException;
 	
-	public void joinParty(Session hostSession, JSONObject json) 
-			throws PartyNotFoundException, PartyMaxPlayerException;
-	
-	public void partyBusiness(JSONObject json) 
+	public void partyBusiness(Session hostSession, JSONObject json) 
 			throws PartyNotFoundException, JSONFormatException;
-	
+
 }

@@ -14,33 +14,63 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+/**
+ * ResourceManager that handles loading the static resource & allocating them for use of games.
+ * 
+ * Utilizes singleton design.
+ * 
+ * @author zhaoy
+ *
+ */
 public class ResourceManager {
-
-	public static String[] categoriesRes;
-
-
-
+	private static ResourceManager singletonRes;
+	
+	
+	public String[] categoriesRes;
+	
+	
+	
 	public ResourceManager(){
 	}
 
-
-
+	
+	
+	/**
+	 * Singleton get method that ensures the exist of only one 
+	 * @return
+	 */
+	public static ResourceManager getInstance(){
+		if (singletonRes == null)			{
+			singletonRes = new ResourceManager();	
+			singletonRes.loadRes();
+		}
+		
+		return singletonRes;
+	}
+	
+	
+	
 	/**
 	 * 
 	 * @param path
 	 */
-	public static void loadRes(String path){
+	public void loadRes(){
 
 		System.out.println("loading resource to resource manager");
 
-
-		JSONParser parser = new JSONParser();
-
+		StringBuilder pathSB = new StringBuilder();
+		pathSB.append(System.getProperty("user.dir"));
+		pathSB.append("\\WebContent\\WEB-INF\\res");
+		
+		String path = pathSB.toString();
 		try {
 
-			System.out.println("accessing: " + path+ "/cat.json");
+			System.out.println("accessing: " + path + "\\cat.json");
 
-			FileReader fr = new FileReader(path+ "/cat.json");
+			FileReader fr = new FileReader(path+ "\\cat.json");
+			
+			
+			JSONParser parser = new JSONParser();
 			Object obj = parser.parse(fr);
 
 			JSONObject jsonObject =  (JSONObject) obj;
@@ -66,47 +96,75 @@ public class ResourceManager {
 		} finally {
 
 		}
+		
+		System.out.println("loading done");
+
+		
 	}
 
 
 	/**
 	 * This method returns 10 random categories
-	 * @param path
+	 * @return in the form of an ArrayList containing Strings. Is thread safe.
+	 * 
 	 */
-	public static ArrayList<String> getRandomCatList(){
-		// Create array first for 10 unique categories indexes
-		int[] indexes = new int[10];
-		
-		
-		// Cycle of 10
-		for (int i = 0; i < indexes.length; i++){
-			int curIndex;
-			boolean duplicate = false;
+	public ArrayList<String> getRandomCatList(){
+		System.out.println("getting random list");
 
-			
-			// Randomize a number, and then trace back to check for duplication
-			// if duplicate, increment by 1 and check again
-			curIndex = (int) (categoriesRes.length * Math.random());
-			do {
-				for  (int j = 0; j < i; j++){
-					if(indexes[j] == curIndex)		duplicate = true;
-					else							curIndex++;
-				}
-			} while (duplicate);
-			
-			indexes[i] = curIndex;
-		}
 		
+		// Create array first for 10 unique categories indexes
+		int[] indexes = getRandomTen(this.categoriesRes.length);
+
+
+		// Fetch actual Strings in accord to the randomized ten indexes 
+		// from resource stash.
 		
-		
-		// Fetch actual Strings from resource stash.
 		ArrayList<String> ret = new ArrayList<String>();
+		
 		for (int i = 0; i < indexes.length; i++){
 			ret.add(categoriesRes[ indexes[i] ]);	
 		}
 
 		return ret;	
 	}
+	
+	
+	
+	
+	/**
+	 * ---LOW PERFORMANCE, COME BACK!---
+	 * 
+	 * @param length
+	 * @return
+	 */
+	public static int[] getRandomTen(int length){
+		int[] ret = new int[10];
+
+		for (int i = 0; i < ret.length; i++){
+			boolean duplicate;
+			int rando;
+			do{
+				duplicate = false ;
+				
+				rando = (int) (length * Math.random());
+				
+				boolean duplicateFound = false;
+				for (int j = 0; j < i && !duplicateFound; j ++ ){
+//					System.out.println("comparing these two: " + rando + " and " + ret[j]);
+					
+					if (rando == ret[j]){		
+						duplicate = true;
+						duplicateFound = true;
+					}
+				}
+				
+			} while (duplicate);
+
+//			System.out.println("Its it! its: " + rando);
+			ret[i] = rando;
+		}
+		return ret;
+	}
+
 
 }
- 

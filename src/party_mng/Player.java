@@ -1,4 +1,4 @@
-package session_mng;
+package party_mng;
 
 import java.net.InetAddress;
 
@@ -7,7 +7,7 @@ import javax.websocket.Session;
 import org.json.simple.JSONObject;
 
 public class Player {
-	Session webSocketSession;		// session 
+	Session webSocketSession;		// Session that allows th
 	
 	String name;
 	
@@ -19,9 +19,19 @@ public class Player {
 		this.webSocketSession = sess;
 		
 		this.name = (String) json.get("name");
+		
 		this.deviceID = (String) json.get("deviceID");
+		
 	}
 
+	
+	
+	public void sendJSONFile(JSONObject json){
+		this.webSocketSession.getAsyncRemote().sendText(json.toString());	
+	}
+	
+	
+	
 	public Session getWebSocketSession() {
 		return webSocketSession;
 	}
