@@ -4,22 +4,32 @@ import javax.websocket.Session;
 
 import org.json.simple.JSONObject;
 
+import exceptions.IllegalAuthorizationException;
 import exceptions.PartyMaxPlayerException;
 
 public interface GamePartyInterface {
 
+	public void joinPlayer(Session hostSession, JSONObject json) throws PartyMaxPlayerException;
 	
-	public void joinPlayer(Session hostSession, JSONObject json);
+	public void sendUpdatedPlayerList();
 	
-	public void startParty(JSONObject json);
+	public void startParty(JSONObject json) throws IllegalAuthorizationException;
 	
+	public void sendQuestionList();
+
 	public void receiveAnswerList(JSONObject json);
 	
+	public void sendVoteList();
+
 	public void receiveCompletedVoteList(JSONObject json);
 	
+	public void sendResultList();
+
 	public void restartParty();
 	
 	
+	
+	public JSONObject fabricateCreationNotifyJson();
 	
 	public JSONObject fabricateUpdatePlayerListJson();
 	

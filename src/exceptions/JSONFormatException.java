@@ -1,6 +1,7 @@
 package exceptions;
 
-public class JSONFormatException extends Exception{
+public class JSONFormatException extends CustomException{
+	
 	public JSONFormatException(String message) {
 		super(message);
 	}

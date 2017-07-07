@@ -4,17 +4,24 @@ import javax.websocket.Session;
 
 import org.json.simple.JSONObject;
 
+import exceptions.IllegalAuthorizationException;
 import exceptions.JSONFormatException;
+import exceptions.CustomException;
 import exceptions.PartyMaxPlayerException;
 import exceptions.PartyNotFoundException;
 import exceptions.PartyOverloadException;
 
 public interface PartyManagerInterface {
 		
-	public int initParty(Session hostSession, JSONObject json)
+	public void initParty(Session hostSession, JSONObject json)
 			throws PartyOverloadException;
 	
+
+	public void terminateParty(Session hostSession, JSONObject json)
+			throws CustomException;
+	
+		
 	public void partyBusiness(Session hostSession, JSONObject json) 
-			throws PartyNotFoundException, JSONFormatException;
+			throws CustomException, JSONFormatException;
 
 }

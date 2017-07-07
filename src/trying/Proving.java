@@ -14,6 +14,8 @@ public class Proving {
 
 		JSONObject json = new JSONObject();
 		json.put("type", "SendPlayerList");
+		
+		json.put("number", 11);
 
 		JSONArray arr = new JSONArray();
 
@@ -34,15 +36,8 @@ public class Proving {
 		System.out.println(json.toString());
 		System.out.println("-----------------------");
 
+		System.out.println(json.get("aweqd")+ "dwa");
 
-
-
-		ArrayList<String> stuff = ResourceManager.getInstance().getRandomCatList();
-
-		System.out.println("shit goes on");
-		for (int i = 0; i < stuff.size(); i++){
-			System.out.println("number " +i+ ": " + stuff.get(i));
-		}
 
 		
 		

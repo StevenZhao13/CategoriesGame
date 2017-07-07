@@ -21,11 +21,13 @@ public class Player {
 		this.name = (String) json.get("name");
 		
 		this.deviceID = (String) json.get("deviceID");
-		
 	}
 
 	
-	
+	/**
+	 * This method sends the json String passed in asyncronously to the player. 
+	 * @param json
+	 */
 	public void sendJSONFile(JSONObject json){
 		this.webSocketSession.getAsyncRemote().sendText(json.toString());	
 	}

@@ -23,7 +23,7 @@ import org.json.simple.parser.ParseException;
  *
  */
 public class ResourceManager {
-	private static ResourceManager singletonRes;
+	private static ResourceManager singletonResManager;
 	
 	
 	public String[] categoriesRes;
@@ -40,12 +40,12 @@ public class ResourceManager {
 	 * @return
 	 */
 	public static ResourceManager getInstance(){
-		if (singletonRes == null)			{
-			singletonRes = new ResourceManager();	
-			singletonRes.loadRes();
+		if (singletonResManager == null){
+			singletonResManager = new ResourceManager();	
+			singletonResManager.loadRes();
 		}
 		
-		return singletonRes;
+		return singletonResManager;
 	}
 	
 	

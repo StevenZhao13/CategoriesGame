@@ -10,69 +10,105 @@ import org.json.simple.JSONObject;
 
 import resource_mng.ResourceManager;
 import toolbox.ToolBox;
+import exceptions.IllegalAuthorizationException;
 import exceptions.PartyMaxPlayerException;
 import exceptions.PartyNotFoundException;
 
 public class GameParty implements GamePartyInterface{
+	
 	public static int MAX_PLAYER = 8;
-	private Player[] players;
+	private int partyID;
+	
+	
+	private static int PREP_PHASE = 0, ANSWERING_PHASE = 1, VOTE_PHASE = 2, RESULT_PHASE = 3; 
+	private int GamePhase;
+	
+	private Player host;
+	private Player[] players;			// Array holding pointers to all the players.
+	// "players[0]" holds the same pointer as "host" holds.
+	// We holds it in array "players" 
 
-
-
+	
 	/**
-	 * Initiating a session. 
+	 * Constructo
+	 * 
+	 * This constructor does:
+	 * 		1. Instantiate the host player. 
+	 * 
 	 * @param hostSession
+	 * @param Input
 	 */
-	public GameParty(Session hostSession, JSONObject Input){
+	public GameParty(Session hostSession, JSONObject Input, int partyID){
+		this.partyID = partyID;
 		this.players = new Player[MAX_PLAYER];
-		this.players[0] = new Player(hostSession, Input);
 		
+		
+		this.host = new Player(hostSession, Input);
+		this.players[0] = this.host;
+
+		
+		JSONObject message = this.fabricateCreationNotifyJson();
+		this.host.sendJSONFile(message);
 	}
-
-
+	
+	
+	
 	/**
 	 * 
 	 */
 	@Override
-	public void joinPlayer(Session hostSession, JSONObject jsonInput){
+	public void joinPlayer(Session hostSession, JSONObject jsonInput) throws PartyMaxPlayerException{
 
-		int i;
-		for (i = 0; i < this.players.length; i++){
-			if (this.players[i] == null){
-				this.players[i] = new Player(hostSession, jsonInput);
+		int playerIndex;
+		boolean slotFound = false;
+		
+		for (playerIndex = 0; playerIndex < this.players.length && !slotFound ; playerIndex++){
+			if (this.players[playerIndex] == null){
+				this.players[playerIndex] = new Player(hostSession, jsonInput);
+				slotFound = true;
 			} else {}
 		}
-
-		if (i >= this.players.length){
-			// Logic to notify the player that the max player count has been reached
+		
+		
+		// Logic to notify the player that the max player count has been reached
+		if (playerIndex >= this.players.length){
+			throw new PartyMaxPlayerException("Max player has been reached for the game.");
 		}
 
-		
-		// Sending 
-		// Fabricated JSON 
-		// to all 
+		this.sendUpdatedPlayerList();
+	}
+
+
+	
+	@Override
+	public void sendUpdatedPlayerList() {
+		// Sending
+		// Fabricated JSON
+		// to all
 		JSONObject jsonResponse = this.fabricateUpdatePlayerListJson();
 		this.sendToAll(jsonResponse);
 	}
 
 
 
-
-
-
 	/**
 	 * 
 	 */
 	@Override
-	public void startParty(JSONObject jsonInput) {
-
+	public void startParty(JSONObject jsonInput) throws IllegalAuthorizationException{
+		
+		// Cool start the shit
+		
+		
 
 
 	}
 
-	
-	
-	
+
+	public void sendQuestionList(){
+		
+	}
+
 
 
 
@@ -87,7 +123,6 @@ public class GameParty implements GamePartyInterface{
 	@Override
 	public void receiveAnswerList(JSONObject jsonInput) {
 		String deviceid = (String) jsonInput.get("deviceID");
-
 
 		boolean correctPlayerFound = false;
 		for (int i = 0; i < this.players.length; i++){
@@ -105,13 +140,17 @@ public class GameParty implements GamePartyInterface{
 			} else {}
 		}
 
-
 		// Handle situation of player not found.
 		// TO be work on
 		if (correctPlayerFound == false){
+			
 		}
+	}
 
 
+
+
+	public void sendVoteList(){
 		// Go thru every player to check if all answers are in. 
 		boolean allCheck = true;
 
@@ -126,17 +165,12 @@ public class GameParty implements GamePartyInterface{
 			} else {}
 		}
 
-		
 		// If all results are in, send vote list
 		if (allCheck){
 			JSONObject jsonResponse = this.fabricateUpdatePlayerListJson();
 			this.sendToAll(jsonResponse);;
 		}
 	}
-
-
-
-
 
 
 
@@ -150,41 +184,65 @@ public class GameParty implements GamePartyInterface{
 
 	}
 
+
+	public void sendResultList(){
 	
-	
-	
-	
-	
+	}
 
 
+	@Override
+	public void restartParty() {
+		// TODO Auto-generated method stub
+
+	}
+
 	
+	
+	
+	
+	/**
+	 * @return
+	 */
+	@Override
+	public JSONObject fabricateCreationNotifyJson() {
+		JSONObject json = new JSONObject();
+		json.put("type", "ConfirmInit");
+		json.put("partyID", this.partyID);
+		
+		return json;
+	}
+
+
+
+
 	/**
 	 * This method fabricate a JSON that contains the updated player list of this Game Party
 	 * 
+	 * @return
 	 */
 	@Override
 	public JSONObject fabricateUpdatePlayerListJson() {
+	
 		JSONObject json = new JSONObject();
 		json.put("type", "SendPlayerList");
 
 		JSONArray jarray = new JSONArray();
-
 		for (int i = 0; i < this.players.length; i++){
 			if (this.players[i] != null){
 				jarray.add(this.players[i].getName());
 			} else {}
 		}
 
-		json.put("names", jarray);
-		
-		
+		json.put("nameList", jarray);
+
 		return json;
 	}
 
 
-	
+
 	/**
 	 * 
+	 * @return
 	 */
 	@Override
 	public JSONObject fabricateLetterNListJson() {
@@ -202,6 +260,11 @@ public class GameParty implements GamePartyInterface{
 	}
 
 
+	/**
+	 * 
+	 * 
+	 * @return
+	 */
 	@Override
 	public JSONObject fabricateVoteListJson() {
 		// Prep the JSON. Is same for all the players
@@ -215,6 +278,12 @@ public class GameParty implements GamePartyInterface{
 	}
 
 
+	
+	/**
+	 * 
+	 * 
+	 * @return
+	 */
 	@Override
 	public JSONObject fabricateResultNListJson() {
 		// TODO Auto-generated method stub
@@ -222,6 +291,11 @@ public class GameParty implements GamePartyInterface{
 	}
 
 
+	/**
+	 * 
+	 * 
+	 * @return
+	 */
 	@Override
 	public JSONObject fabricateRestartJson() {
 		// TODO Auto-generated method stub
@@ -229,16 +303,11 @@ public class GameParty implements GamePartyInterface{
 	}
 
 
-	@Override
-	public void restartParty() {
-		// TODO Auto-generated method stub
-		
-	}
 
 
-	
-	
-	
+
+
+
 	/**
 	 * Utility method that sends a json file to all the players
 	 * @param jsonResponse
@@ -254,6 +323,13 @@ public class GameParty implements GamePartyInterface{
 			} else {}
 		}
 	}
+
+
+
+
+
+
+
 
 
 
