@@ -6,6 +6,7 @@ import org.json.simple.JSONObject;
 
 import exceptions.IllegalAuthorizationException;
 import exceptions.PartyMaxPlayerException;
+import exceptions.PlayerNotFoundException;
 
 public interface GamePartyInterface {
 
@@ -17,13 +18,13 @@ public interface GamePartyInterface {
 	
 	public void sendQuestionList();
 
-	public void receiveAnswerList(JSONObject json);
+	public void receiveAnswerList(JSONObject json) throws PlayerNotFoundException;
 	
-	public void sendVoteList();
+	public void attemptSendVoteList();
 
-	public void receiveCompletedVoteList(JSONObject json);
+	public void receiveCompletedVoteList(JSONObject json) throws PlayerNotFoundException;
 	
-	public void sendResultList();
+	public void attemptSendResultList();
 
 	public void restartParty();
 	

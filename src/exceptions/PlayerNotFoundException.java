@@ -1,6 +1,7 @@
 package exceptions;
 
-public class PlayerNotFoundException extends Exception {
+public class PlayerNotFoundException extends CustomException {
+	
 	public PlayerNotFoundException(String message) {
 		super(message);
 	}
