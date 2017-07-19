@@ -63,10 +63,11 @@ public class PartyManager implements PartyManagerInterface {
 	 * 		
 	 * @param hostSession
 	 * @param jsonInput
+	 * @throws JSONFormatException 
 	 */
 	@Override
 	public void initParty(Session hostSession, JSONObject jsonInput) 
-			throws PartyOverloadException{
+			throws PartyOverloadException, JSONFormatException{
 		
 		// 1. Find the proper slot for the new Party to be hosted.
 		int i;
@@ -120,11 +121,13 @@ public class PartyManager implements PartyManagerInterface {
 	public void partyBusiness(Session hostSession, JSONObject jsonInput) 
 			throws CustomException, JSONFormatException{	
 		
-		// Checking Json format correctness. If not parseable throw exception for upstream handling.
-		if (jsonInput.get("type") == null)			throw new JSONFormatException("JSON file format can't parse");		
-		
 		
 		String type = (String) jsonInput.get("type");
+
+		// Checking Json format correctness. If not parseable throw exception for upstream handling.
+		if (type == null)			throw new JSONFormatException("JSON file format can't parse");		
+		
+		
 
 		if (type.equals("InitiateParty")){
 			// 1. Check if the inquiry is about creating a new Party, which can not be handled within a certain party.
@@ -136,16 +139,17 @@ public class PartyManager implements PartyManagerInterface {
 			
 		} else {
 			// 3. If its an business inside a party, it proceeds here. 
-		
+			
+			
+			Integer partyIndex = (int) jsonInput.get("partyID");
+			
 			// Checking Json format correction. If not correct throw exception for upstream handling.
-			if (jsonInput.get("partyID") == null)			throw new JSONFormatException("JSON file format can't parse");
+			if (partyIndex == null)			throw new JSONFormatException("JSON file format can't parse");
 
 			
-			int partyIndex = (int) jsonInput.get("partyID");
 			
 			// Check for if the requested party even exist. 
 			if (this.parties[partyIndex] == null)			throw new PartyNotFoundException("requested specific party not found");
-			
 			
 			GameParty thisParty = this.parties[partyIndex];
 

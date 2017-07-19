@@ -5,12 +5,13 @@ import javax.websocket.Session;
 import org.json.simple.JSONObject;
 
 import exceptions.IllegalAuthorizationException;
+import exceptions.JSONFormatException;
 import exceptions.PartyMaxPlayerException;
 import exceptions.PlayerNotFoundException;
 
 public interface GamePartyInterface {
 
-	public void joinPlayer(Session hostSession, JSONObject json) throws PartyMaxPlayerException;
+	public void joinPlayer(Session hostSession, JSONObject json) throws PartyMaxPlayerException, JSONFormatException;
 	
 	public void sendUpdatedPlayerList();
 	
@@ -18,16 +19,19 @@ public interface GamePartyInterface {
 	
 	public void sendQuestionList();
 
-	public void receiveAnswerList(JSONObject json) throws PlayerNotFoundException;
+	public void receiveAnswerList(JSONObject json) throws PlayerNotFoundException, JSONFormatException;
 	
 	public void attemptSendVoteList();
 
-	public void receiveCompletedVoteList(JSONObject json) throws PlayerNotFoundException;
+	public void receiveCompletedVoteList(JSONObject json) throws PlayerNotFoundException, JSONFormatException;
 	
 	public void attemptSendResultList();
 
 	public void restartParty();
 	
+	public void endParty();
+
+	public Player findPlayerByDeviceID(String deviceID) throws PlayerNotFoundException;
 	
 	
 	public JSONObject fabricateCreationNotifyJson();

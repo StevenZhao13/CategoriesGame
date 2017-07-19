@@ -14,7 +14,7 @@ import exceptions.PartyOverloadException;
 public interface PartyManagerInterface {
 		
 	public void initParty(Session hostSession, JSONObject json)
-			throws PartyOverloadException;
+			throws PartyOverloadException, JSONFormatException;
 	
 
 	public void terminateParty(Session hostSession, JSONObject json)
