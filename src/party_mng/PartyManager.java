@@ -28,16 +28,16 @@ import exceptions.JSONFormatException;
  */
 public class PartyManager implements PartyManagerInterface {
 	public static PartyManager singletonPartyManager;
-	
+
 	public GameParty[] parties;
 
 
 	public PartyManager(){
 		this.parties = new GameParty[65535]; 
 	}
-	
 
-	
+
+
 	/**
 	 * Singleton get method that returns the explicit instance of this class
 	 * @return
@@ -46,11 +46,11 @@ public class PartyManager implements PartyManagerInterface {
 		if (singletonPartyManager == null){
 			singletonPartyManager = new PartyManager();	
 		}
-		
+
 		return singletonPartyManager;
 	}
 
-	
+
 
 	/**
 	 * This method is:
@@ -68,7 +68,7 @@ public class PartyManager implements PartyManagerInterface {
 	@Override
 	public void initParty(Session hostSession, JSONObject jsonInput) 
 			throws PartyOverloadException, JSONFormatException{
-		
+
 		// 1. Find the proper slot for the new Party to be hosted.
 		int i;
 		boolean isCreated = false;
@@ -76,31 +76,34 @@ public class PartyManager implements PartyManagerInterface {
 
 			// go thru every party slot until one thats empty is found
 			if (this.parties[i] == null){
-				
+
 				// 2. Initiate new instance of the Party
 				this.parties[i] = new GameParty(hostSession, jsonInput, i);
 				isCreated = true;
-				
+
 			} else {}
 		}
 
 		// 1b. If all the slots are occupied, throws exception 
 		if (i >= this.parties.length)			throw new PartyOverloadException("Session Number exceeds maximum");		
 
-		
-		
+
+
 	}
-	
+
 	/**
 	 * 
 	 * @param hostSession
 	 * @param jsonInput
 	 */
 	@Override
-	public void terminateParty(Session hostSession, JSONObject jsonInput)
+	public void terminateParty(int index, JSONObject jsonInput)
 			throws CustomException {
-		// TODO Auto-generated method stub
-		
+
+
+		// Assign null to the pointer to the specific party
+		// Then just let GC do its job
+		this.parties[index] = null;
 	}
 
 
@@ -120,50 +123,53 @@ public class PartyManager implements PartyManagerInterface {
 	@Override
 	public void partyBusiness(Session hostSession, JSONObject jsonInput) 
 			throws CustomException, JSONFormatException{	
-		
-		
+
+
 		String type = (String) jsonInput.get("type");
 
 		// Checking Json format correctness. If not parseable throw exception for upstream handling.
 		if (type == null)			throw new JSONFormatException("JSON file format can't parse");		
-		
-		
+
+
 
 		if (type.equals("InitiateParty")){
 			// 1. Check if the inquiry is about creating a new Party, which can not be handled within a certain party.
 			this.initParty(hostSession, jsonInput);
-		
-		} else if (type.equals("TerminateParty")) {
-			// 2. 
-			
-			
+
 		} else {
-			// 3. If its an business inside a party, it proceeds here. 
-			
-			
+
+
+			// 3. If its an business inside a party, it proceeds here to first find the specific party.
 			Integer partyIndex = (int) jsonInput.get("partyID");
-			
+
 			// Checking Json format correction. If not correct throw exception for upstream handling.
 			if (partyIndex == null)			throw new JSONFormatException("JSON file format can't parse");
 
-			
-			
+
+
 			// Check for if the requested party even exist. 
 			if (this.parties[partyIndex] == null)			throw new PartyNotFoundException("requested specific party not found");
-			
+
 			GameParty thisParty = this.parties[partyIndex];
 
 			// Start case handling 
 
 			switch (type){
 			case "JoinParty":				thisParty.joinPlayer(hostSession, jsonInput);
+			
 			case "StartParty": 				thisParty.startParty(jsonInput);
-			case "SendAnswerList": 			thisParty.receiveAnswerList(jsonInput);
-			case "SendCompletedVoteList": 	thisParty.receiveCompletedVoteList(jsonInput);
+			
+			case "AnswerList": 				thisParty.receiveAnswerList(jsonInput);
+			
+			case "CompletedVoteList": 		thisParty.receiveCompletedVoteList(jsonInput);
+			
 			case "RestartParty": 			thisParty.restartParty();
+			
+			case "TerminateParty":			thisParty.notifyTermination();
+											this.terminateParty(partyIndex, jsonInput);
 
-			// 
-			default: throw new JSONFormatException("JSON file format can't parse");
+			// defaultly throw exception of none of the expected types has been found
+			default: 		throw new JSONFormatException("JSON file format can't parse");
 			}
 
 		}

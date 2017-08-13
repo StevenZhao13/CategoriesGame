@@ -24,7 +24,7 @@ import org.json.simple.parser.ParseException;
  */
 public class ResourceManager {
 	private static ResourceManager singletonResManager;
-	
+	public static int entryNo = 10;
 	
 	public String[] categoriesRes;
 	
@@ -138,7 +138,7 @@ public class ResourceManager {
 	 * @return
 	 */
 	public static int[] getRandomTen(int length){
-		int[] ret = new int[10];
+		int[] ret = new int[ResourceManager.entryNo];
 
 		for (int i = 0; i < ret.length; i++){
 			boolean duplicate;

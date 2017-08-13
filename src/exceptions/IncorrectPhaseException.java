@@ -1,6 +1,6 @@
 package exceptions;
 
-public class IncorrectPhaseException extends Exception {
+public class IncorrectPhaseException extends CustomException {
 	public IncorrectPhaseException(String message) {
 		super(message);
 	}

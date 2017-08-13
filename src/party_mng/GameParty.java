@@ -5,16 +5,15 @@ import java.io.IOException;
 import javax.websocket.EncodeException;
 import javax.websocket.Session;
 
-import org.eclipse.jdt.internal.compiler.ast.ThisReference;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import resource_mng.ResourceManager;
 import toolbox.ToolBox;
 import exceptions.IllegalAuthorizationException;
+import exceptions.IncorrectPhaseException;
 import exceptions.JSONFormatException;
 import exceptions.PartyMaxPlayerException;
-import exceptions.PartyNotFoundException;
 import exceptions.PlayerNotFoundException;
 
 public class GameParty implements GamePartyInterface{
@@ -23,7 +22,7 @@ public class GameParty implements GamePartyInterface{
 
 
 	private int GamePhase;
-	public static int PREP_PHASE = 0, ANSWERING_PHASE = 1, VOTE_PHASE = 2, RESULT_PHASE = 3; 
+	public static int PREP_PHASE = 0, ANSWERING_PHASE = 1, VOTING_PHASE = 2, RESULT_PHASE = 3; 
 
 	public static int MAX_PLAYER = 8;	// 8 max player count
 
@@ -57,8 +56,8 @@ public class GameParty implements GamePartyInterface{
 
 		this.playerCount = 0;	this.playerCount ++ ;
 
-		JSONObject message = this.fabricateCreationNotifyJson();
-		this.host.sendJSONFile(message);
+		JSONObject message = this.fabricateConfirmInitJson();
+		this.host.sendAsyncJSONFile(message);
 	}
 
 
@@ -78,31 +77,37 @@ public class GameParty implements GamePartyInterface{
 	 * @throws JSONFormatException 
 	 */
 	@Override
-	public void joinPlayer(Session hostSession, JSONObject jsonInput) throws PartyMaxPlayerException, JSONFormatException{
+	public void joinPlayer(Session hostSession, JSONObject jsonInput) throws IncorrectPhaseException, PartyMaxPlayerException, JSONFormatException{
 		if (!(this.GamePhase == GameParty.PREP_PHASE)){
+			throw new IncorrectPhaseException("Wrong phase");
+		} else {
 
+
+			int playerIndex;
+			boolean slotFound = false;
+
+			for (playerIndex = 0; playerIndex < this.players.length && !slotFound ; playerIndex++){
+				if (this.players[playerIndex] == null){
+					this.players[playerIndex] = new Player(hostSession, jsonInput);
+					slotFound = true;
+				} else {}
+			}
+
+
+			// Logic to notify the player that the max player count has been reached
+			if (playerIndex >= this.players.length){
+				throw new PartyMaxPlayerException("Max player has been reached for the game.");
+			}
+
+
+			this.playerCount ++ ;
+
+			JSONObject message = this.fabricateConfirmInitJson();
+
+			this.host.sendAsyncJSONFile(message);
+
+			this.sendUpdatedPlayerList();
 		}
-
-
-		int playerIndex;
-		boolean slotFound = false;
-
-		for (playerIndex = 0; playerIndex < this.players.length && !slotFound ; playerIndex++){
-			if (this.players[playerIndex] == null){
-				this.players[playerIndex] = new Player(hostSession, jsonInput);
-				slotFound = true;
-			} else {}
-		}
-
-
-		// Logic to notify the player that the max player count has been reached
-		if (playerIndex >= this.players.length){
-			throw new PartyMaxPlayerException("Max player has been reached for the game.");
-		}
-
-
-		this.playerCount ++ ;
-		this.sendUpdatedPlayerList();
 	}
 
 
@@ -131,19 +136,21 @@ public class GameParty implements GamePartyInterface{
 	 * It does:
 	 * 		Switch game phase
 	 * 		And send the question list
+	 * @throws IncorrectPhaseException 
 	 * 		
 	 */
 	@Override
-	public void startParty(JSONObject jsonInput) throws IllegalAuthorizationException{
+	public void startParty(JSONObject jsonInput) throws IllegalAuthorizationException, IncorrectPhaseException{
 		if (!(this.GamePhase == GameParty.PREP_PHASE)){
+			throw new IncorrectPhaseException("Wrong phase");
+		} else {
 
+			// Cool start the shit
+
+			this.GamePhase = GameParty.ANSWERING_PHASE;
+
+			this.sendQuestionList();
 		}
-
-		// Cool start the shit
-
-		this.GamePhase = GameParty.ANSWERING_PHASE;
-
-		this.sendQuestionList();
 	}
 
 
@@ -172,40 +179,43 @@ public class GameParty implements GamePartyInterface{
 	 * FUDGING BUNCHY!
 	 *  Optimize if you have time
 	 * @throws JSONFormatException 
+	 * @throws IncorrectPhaseException 
 	 * 
 	 */
 	@Override
-	public void receiveAnswerList(JSONObject jsonInput) throws PlayerNotFoundException, JSONFormatException{
+	public void receiveAnswerList(JSONObject jsonInput) throws PlayerNotFoundException, JSONFormatException, IncorrectPhaseException{
 		if (!(this.GamePhase == GameParty.ANSWERING_PHASE)){
+			throw new IncorrectPhaseException("Wrong phase");
 
+		} else {
+
+
+			// Acquire ID from JsonInput
+			String deviceID = (String) jsonInput.get("deviceID");
+			// Check format, throw Exception if proper keyword not found
+			if (deviceID == null)			throw new JSONFormatException("JSON file format can't parse");
+
+
+			// Finds the proper player with the right ID
+			Player playerWhoSent = this.findPlayerByDeviceID(deviceID);
+
+
+			// Acquire obtained answers from JsonInput
+			JSONArray arr = (JSONArray) jsonInput.get("answerList");
+			// Check format, throw Exception if proper keyword not found
+			if (arr == null)			throw new JSONFormatException("JSON file format can't parse");		
+
+			String[] answerList = (String[]) arr.toArray();
+
+
+
+			// Fill in the answer
+			playerWhoSent.setAnswers(answerList);
+
+
+			// TRY SEND VOTE LIST
+			this.attemptSendVoteList();
 		}
-
-
-		// Acquire ID from JsonInput
-		String deviceID = (String) jsonInput.get("deviceID");
-		// Check format, throw Exception if proper keyword not found
-		if (deviceID == null)			throw new JSONFormatException("JSON file format can't parse");
-
-
-		// Finds the proper player with the right ID
-		Player playerWhoSent = this.findPlayerByDeviceID(deviceID);
-
-
-		// Acquire obtained answers from JsonInput
-		JSONArray arr = (JSONArray) jsonInput.get("answerList");
-		// Check format, throw Exception if proper keyword not found
-		if (arr == null)			throw new JSONFormatException("JSON file format can't parse");		
-
-		String[] answerList = (String[]) arr.toArray();
-
-
-
-		// Fill in the answer
-		playerWhoSent.setAnswers(answerList);
-
-
-		// TRY SEND VOTE LIST
-		this.attemptSendVoteList();
 	}
 
 
@@ -239,6 +249,8 @@ public class GameParty implements GamePartyInterface{
 
 		// If all results are in, send vote list
 		if (allCheck){
+			this.GamePhase = GameParty.VOTING_PHASE;
+
 			JSONObject voteList = this.fabricateVoteListJson();
 			this.sendToAll(voteList);;
 		} else {}
@@ -253,42 +265,45 @@ public class GameParty implements GamePartyInterface{
 	 * This method is:
 	 * 		Called upon receiving completed vote list from users.
 	 * @throws JSONFormatException 
+	 * @throws IncorrectPhaseException 
 	 * 
 	 */
 	@Override
-	public void receiveCompletedVoteList(JSONObject jsonInput) throws PlayerNotFoundException, JSONFormatException{
-		if (!(this.GamePhase == GameParty.VOTE_PHASE)){
+	public void receiveCompletedVoteList(JSONObject jsonInput) throws PlayerNotFoundException, JSONFormatException, IncorrectPhaseException{
+		if (!(this.GamePhase == GameParty.VOTING_PHASE)){
+			throw new IncorrectPhaseException("Wrong phase");
 
+		} else {
+
+			// Acquire ID from JsonInput
+			String deviceID = (String) jsonInput.get("deviceID");
+			// Check format, throw Exception if proper keyword not found
+			if (deviceID == null)			throw new JSONFormatException("JSON file format can't parse");
+
+			// Making sure the player with the specified ID exist, if not throws error to be handled upstream
+			// This pointer serves no specific purpose. 
+			Player playerWhoSent = this.findPlayerByDeviceID(deviceID);
+
+
+
+			// Acquire list of player device IDs for vote regging one by one
+			JSONArray arr = (JSONArray) jsonInput.get("IDList");
+			// Check format, throw Exception if proper keyword not found
+			if (arr == null)			throw new JSONFormatException("JSON file format can't parse");
+			String[] IDList = (String[]) arr.toArray();
+
+
+			// Assign votes to each players
+			for (int i = 0; i < IDList.length; i++){
+				Player voteReceiver = this.findPlayerByDeviceID(IDList[i]);
+
+				voteReceiver.readVotes(jsonInput);
+			}
+
+
+			// TRY SEND RESULTS
+			this.attemptSendResultList();
 		}
-
-		// Acquire ID from JsonInput
-		String deviceID = (String) jsonInput.get("deviceID");
-		// Check format, throw Exception if proper keyword not found
-		if (deviceID == null)			throw new JSONFormatException("JSON file format can't parse");
-
-		// Making sure the player with the specified ID exist, if not throws error to be handled upstream
-		// This pointer serves no specific purpose. 
-		Player playerWhoSent = this.findPlayerByDeviceID(deviceID);
-
-
-
-		// Acquire list of player device IDs for vote regging one by one
-		JSONArray arr = (JSONArray) jsonInput.get("IDList");
-		// Check format, throw Exception if proper keyword not found
-		if (arr == null)			throw new JSONFormatException("JSON file format can't parse");
-		String[] IDList = (String[]) arr.toArray();
-
-
-		// Assign votes to each players
-		for (int i = 0; i < IDList.length; i++){
-			Player voteReceiver = this.findPlayerByDeviceID(IDList[i]);
-
-			voteReceiver.readVotes(jsonInput);
-		}
-
-
-		// TRY SEND RESULTS
-		this.attemptSendResultList();
 	}
 
 
@@ -312,7 +327,7 @@ public class GameParty implements GamePartyInterface{
 
 		for (int i = 0; i < this.players.length && allCheck == true; i++){
 			// Check for current player exist. 
-			if (this.players[i] == null && this.players[i].getVotePackageReceived()+1 != this.playerCount){
+			if (this.players[i] != null && this.players[i].getVotePackageReceived() + 1 != this.playerCount){
 				// If any of the answer is not in, then set it to false
 				allCheck = false;
 			} else {}
@@ -321,7 +336,9 @@ public class GameParty implements GamePartyInterface{
 
 		// If all results are in, send vote list
 		if (allCheck){
-			JSONObject voteList = this.fabricateResultNListJson();
+			this.GamePhase = GameParty.RESULT_PHASE;
+
+			JSONObject voteList = this.fabricateResultListJson();
 			this.sendToAll(voteList);;
 		} else {}
 
@@ -330,26 +347,49 @@ public class GameParty implements GamePartyInterface{
 
 
 	/**
+	 * @throws IncorrectPhaseException 
 	 * 
 	 */
 	@Override
-	public void restartParty() {
-		/*
-		 * IMPLEMENT SERVER-SIDE CLEAN-UP  
-		 */
-		
-		JSONObject voteList = this.fabricateRestartJson();
-		this.sendToAll(voteList);;
+	public void restartParty() throws IncorrectPhaseException {
+		if (!(this.GamePhase == GameParty.VOTING_PHASE)){
+			throw new IncorrectPhaseException("Wrong phase");
+
+		} else {
+			this.GamePhase = GameParty.PREP_PHASE;
+			
+			Player newHost = new Player(this.host);
+			this.host = newHost;
+			
+			
+			for (int i = 0; i < this.players.length; i++){
+				// Check for current player exist. 
+				if (this.players[i] != null){
+					// If exist, create a new clean player to take place of the old one
+					Player newPlayer = new Player(this.players[i]);
+					this.players[i] = newPlayer;
+				} else {}
+			}
+
+
+
+
+			JSONObject json = this.fabricateConfirmRestartJson();
+			this.sendToAll(json);
+		}
 	}
 
-	
+
+
 	/**
 	 * 
 	 */
-	public void endParty(){
-		/*
-		 * IMPLEMENT SERVER-SIDE CLEAN-UP
-		 */
+	@Override
+	public void notifyTermination() {
+
+
+		JSONObject json = this.fabricateConfirmTerminateJson();
+		this.sendToAll(json);;
 	}
 
 
@@ -374,8 +414,6 @@ public class GameParty implements GamePartyInterface{
 
 		}
 
-		// Handle situation of player not found.
-		// TO be work on
 		if (correctPlayerFound == false){
 			throw new PlayerNotFoundException("Requested player not found in the party");
 		}
@@ -387,10 +425,12 @@ public class GameParty implements GamePartyInterface{
 
 
 	/**
+	 * 
+	 * =DONE PROPER=
 	 * @return
 	 */
 	@Override
-	public JSONObject fabricateCreationNotifyJson() {
+	public JSONObject fabricateConfirmInitJson() {
 		JSONObject json = new JSONObject();
 		json.put("type", "ConfirmInit");
 		json.put("partyID", this.partyID);
@@ -399,6 +439,18 @@ public class GameParty implements GamePartyInterface{
 	}
 
 
+	/**
+	 * 
+	 * =DONE PROPER=
+	 * @return
+	 */
+	@Override
+	public JSONObject fabricateConfirmJoinJson() {
+		JSONObject json = new JSONObject();
+		json.put("type", "ConfirmJoin");
+
+		return json;
+	}
 
 
 	/**
@@ -410,7 +462,7 @@ public class GameParty implements GamePartyInterface{
 	public JSONObject fabricateUpdatePlayerListJson() {
 
 		JSONObject json = new JSONObject();
-		json.put("type", "SendPlayerList");
+		json.put("type", "UpdatePlayerList");
 
 		JSONArray jarray = new JSONArray();
 		for (int i = 0; i < this.players.length; i++){
@@ -431,10 +483,10 @@ public class GameParty implements GamePartyInterface{
 	 * @return
 	 */
 	@Override
-	public JSONObject fabricateLetterNListJson() {
+	public JSONObject fabricateLetterNCategoryListJson() {
 		JSONObject json = new JSONObject();
 
-		json.put("type", "SendLetterNList");
+		json.put("type", "LetterNCategoryList");
 		json.put("letter", ToolBox.rollLetter());
 
 
@@ -459,7 +511,7 @@ public class GameParty implements GamePartyInterface{
 		JSONObject json = new JSONObject();
 
 		// puts in Identifier of type
-		json.put("type", "SendVoteList");
+		json.put("type", "VoteList");
 
 		// Puts the array in there for player ID look-up
 		JSONArray arrayOfIDs = new JSONArray();
@@ -504,11 +556,11 @@ public class GameParty implements GamePartyInterface{
 	 * @return
 	 */
 	@Override
-	public JSONObject fabricateResultNListJson() {
+	public JSONObject fabricateResultListJson() {
 
 		JSONObject json = new JSONObject();
 
-		json.put("type", "SendResult");
+		json.put("type", "ResultList");
 
 
 		// Puts the array in there for player ID look-up
@@ -556,17 +608,28 @@ public class GameParty implements GamePartyInterface{
 	 * @return
 	 */
 	@Override
-	public JSONObject fabricateRestartJson() {
+	public JSONObject fabricateConfirmRestartJson() {
 		JSONObject json = new JSONObject();
 
-		json.put("type", "NotifyRestart");
+		json.put("type", "ConfirmRestart");
 
 		return json;
 	}
 
 
 
+	/**
+	 * 
+	 * 
+	 * @return
+	 */
+	@Override
+	public JSONObject fabricateConfirmTerminateJson() {
+		JSONObject json = new JSONObject();
+		json.put("type", "ConfirmTerminate");
 
+		return json;
+	}
 
 
 
@@ -582,7 +645,7 @@ public class GameParty implements GamePartyInterface{
 			if (this.players[i] != null){
 
 				// If not empty, Sending JSON package
-				this.players[i].sendJSONFile(jsonResponse);
+				this.players[i].sendAsyncJSONFile(jsonResponse);
 			} else {}
 		}
 	}

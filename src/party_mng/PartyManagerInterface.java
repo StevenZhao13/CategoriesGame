@@ -17,7 +17,7 @@ public interface PartyManagerInterface {
 			throws PartyOverloadException, JSONFormatException;
 	
 
-	public void terminateParty(Session hostSession, JSONObject json)
+	public void terminateParty(int index, JSONObject json)
 			throws CustomException;
 	
 		
