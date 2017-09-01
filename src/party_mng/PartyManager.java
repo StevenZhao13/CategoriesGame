@@ -5,6 +5,7 @@ import javax.websocket.Session;
 import org.json.simple.JSONObject;
 
 import resource_mng.ResourceManager;
+import server_component.APIKeys;
 import exceptions.IllegalAuthorizationException;
 import exceptions.CustomException;
 import exceptions.PartyMaxPlayerException;
@@ -125,14 +126,14 @@ public class PartyManager implements PartyManagerInterface {
 			throws CustomException, JSONFormatException{	
 
 
-		String type = (String) jsonInput.get("type");
+		String type = (String) jsonInput.get(APIKeys.KEY_TYPE);
 
 		// Checking Json format correctness. If not parseable throw exception for upstream handling.
 		if (type == null)			throw new JSONFormatException("JSON file format can't parse");		
 
 
 
-		if (type.equals("InitiateParty")){
+		if (type.equals(APIKeys.TYPE_INITATE_PARTY)){
 			// 1. Check if the inquiry is about creating a new Party, which can not be handled within a certain party.
 			this.initParty(hostSession, jsonInput);
 
@@ -140,7 +141,7 @@ public class PartyManager implements PartyManagerInterface {
 
 
 			// 3. If its an business inside a party, it proceeds here to first find the specific party.
-			Integer partyIndex = (int) jsonInput.get("partyID");
+			Integer partyIndex = (int) jsonInput.get(APIKeys.KEY_PARTY_ID);
 
 			// Checking Json format correction. If not correct throw exception for upstream handling.
 			if (partyIndex == null)			throw new JSONFormatException("JSON file format can't parse");
@@ -155,17 +156,17 @@ public class PartyManager implements PartyManagerInterface {
 			// Start case handling 
 
 			switch (type){
-			case "JoinParty":				thisParty.joinPlayer(hostSession, jsonInput);
+			case APIKeys.TYPE_JOIN_PARTY:				thisParty.joinPlayer(hostSession, jsonInput);
 			
-			case "StartParty": 				thisParty.startParty(jsonInput);
+			case APIKeys.TYPE_START_PARTY: 				thisParty.startParty(jsonInput);
 			
-			case "AnswerList": 				thisParty.receiveAnswerList(jsonInput);
+			case APIKeys.TYPE_SEND_ANSWER_LIST: 				thisParty.receiveAnswerList(jsonInput);
 			
-			case "CompletedVoteList": 		thisParty.receiveCompletedVoteList(jsonInput);
+			case APIKeys.TYPE_SEND_COMPLETE_VOTE_LIST: 		thisParty.receiveCompletedVoteList(jsonInput);
 			
-			case "RestartParty": 			thisParty.restartParty();
+			case APIKeys.TYPE_RESTART_PARTY: 			thisParty.restartParty();
 			
-			case "TerminateParty":			thisParty.notifyTermination();
+			case APIKeys.TYPE_TERMINATE_PARTY:			thisParty.notifyTermination();
 											this.terminateParty(partyIndex, jsonInput);
 
 			// defaultly throw exception of none of the expected types has been found

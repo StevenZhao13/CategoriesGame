@@ -9,6 +9,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import resource_mng.ResourceManager;
+import server_component.APIKeys;
 import toolbox.ToolBox;
 import exceptions.IllegalAuthorizationException;
 import exceptions.IncorrectPhaseException;
@@ -191,7 +192,7 @@ public class GameParty implements GamePartyInterface{
 
 
 			// Acquire ID from JsonInput
-			String deviceID = (String) jsonInput.get("deviceID");
+			String deviceID = (String) jsonInput.get(APIKeys.KEY_DEVICE_ID);
 			// Check format, throw Exception if proper keyword not found
 			if (deviceID == null)			throw new JSONFormatException("JSON file format can't parse");
 
@@ -201,7 +202,7 @@ public class GameParty implements GamePartyInterface{
 
 
 			// Acquire obtained answers from JsonInput
-			JSONArray arr = (JSONArray) jsonInput.get("answerList");
+			JSONArray arr = (JSONArray) jsonInput.get(APIKeys.KEY_ANSWER_LIST);
 			// Check format, throw Exception if proper keyword not found
 			if (arr == null)			throw new JSONFormatException("JSON file format can't parse");		
 
@@ -276,7 +277,7 @@ public class GameParty implements GamePartyInterface{
 		} else {
 
 			// Acquire ID from JsonInput
-			String deviceID = (String) jsonInput.get("deviceID");
+			String deviceID = (String) jsonInput.get(APIKeys.KEY_DEVICE_ID);
 			// Check format, throw Exception if proper keyword not found
 			if (deviceID == null)			throw new JSONFormatException("JSON file format can't parse");
 
@@ -287,7 +288,7 @@ public class GameParty implements GamePartyInterface{
 
 
 			// Acquire list of player device IDs for vote regging one by one
-			JSONArray arr = (JSONArray) jsonInput.get("IDList");
+			JSONArray arr = (JSONArray) jsonInput.get(APIKeys.KEY_ID_LIST);
 			// Check format, throw Exception if proper keyword not found
 			if (arr == null)			throw new JSONFormatException("JSON file format can't parse");
 			String[] IDList = (String[]) arr.toArray();
@@ -370,9 +371,6 @@ public class GameParty implements GamePartyInterface{
 					this.players[i] = newPlayer;
 				} else {}
 			}
-
-
-
 
 			JSONObject json = this.fabricateConfirmRestartJson();
 			this.sendToAll(json);
@@ -650,14 +648,7 @@ public class GameParty implements GamePartyInterface{
 		}
 	}
 
-
-
-
-
-
-
-
-
+	
 
 
 }

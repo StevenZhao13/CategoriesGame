@@ -52,7 +52,8 @@ public class Player {
 	}
 
 	/**
-	 * This is the constructor used to
+	 * This is the constructor used to create a new object that have identical members as the 
+	 * passed-in mother object
 	 * @param mother
 	 */
 	public Player(Player mother){
